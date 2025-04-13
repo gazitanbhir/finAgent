@@ -133,10 +133,6 @@ async def shutdown_event():
             log.error(f"Error during MCP disconnection on shutdown: {type(e).__name__}: {e}", exc_info=True)
 
 # --- API Routes ---
-# Add this route to serve the JSON file
-@app.get("/static/finance_data.json")
-async def get_financial_data():
-    return FileResponse("finance_data.json")
 
 @app.get("/", response_class=HTMLResponse)
 async def get_index_page(request: Request):
@@ -448,7 +444,18 @@ if __name__ == "__main__":
     log.info("Starting AI Finance Agent FastAPI Application (HTMX + Voice)...")
     log.info(f"MCP Server Script: {SERVER_SCRIPT_PATH}")
     log.info(f"Upload Directory: {UPLOAD_DIR}")
-    log.info("Run with: uvicorn main:app --reload --host 127.0.0.1 --port 5001")
-    log.info("Access UI at: http://127.0.0.1:5001")
+    
+    # Render-specific modifications
+    host = "0.0.0.0" if os.getenv("RENDER") else "127.0.0.1"
+    port = int(os.getenv("PORT", "5001"))
+    reload = not bool(os.getenv("RENDER"))  # Disable reload in production
+    
+    log.info(f"Run with: uvicorn main:app --host {host} --port {port} {'--reload' if reload else ''}")
     log.info("-----------------------------------------------------")
-    uvicorn.run("main:app", host="127.0.0.1", port=5001, reload=True)
+    
+    uvicorn.run(
+        "main:app",
+        host=host,
+        port=port,
+        reload=reload
+    )
