@@ -12,8 +12,7 @@ import csv
 import io
 from typing import Any, Dict, List, Optional
 import traceback
-import pandas as pd # For Excel/CSV reading
-# Ensure openpyxl is installed for .xlsx: pip install openpyxl
+import pandas as pd 
 
 # --- Configuration ---
 DATA_FILE = "static/finance_data.json"
