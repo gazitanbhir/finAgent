@@ -12,7 +12,7 @@ This project implements an AI-powered assistant designed to help with finance-re
 While the initial vision included building a highly dynamic agent builder for complex ERP systems using only open-source components and advanced RAG, this implementation focuses on a functional Finance Agent showcasing:
 
 *   **Conversational AI:** Interacting with Gemini for understanding requests and generating responses.
-*   **Voice Interaction:** Using Groq's Whisper model for speech-to-text.
+*   **Voice Interaction:** Whisper model for speech-to-text.
 *   **File Processing:** Uploading documents (CSV, Excel, TXT, JSON) and automatically converting tabular/text data into a structured JSON format stored alongside the original.
 *   **Tool Use:** Gemini dynamically calls backend tools (via MCP) to perform actions like retrieving account balances, listing transactions, querying document contents, and processing uploaded files.
 *   **Modular Backend:** Using MCP allows the backend logic (tool implementations) to run as a separate process, promoting separation of concerns.
@@ -91,11 +91,9 @@ The application consists of three main components:
 *   **Templating:** Jinja2
 *   **Frontend Dynamics:** HTMX (via CDN in `index.html`)
 *   **AI Model:** Google Gemini (via `google-generativeai`)
-*   **Voice Transcription:** Groq API (Whisper model via `groq`)
+*   **Voice Transcription:** Whisper model ( via `Groq API`)
 *   **Backend Communication:** MCP (Multi-Capability Protocol) via `mcp-fastmcp`
 *   **Data Handling (Server):** Pandas (for CSV/Excel processing)
-*   **Environment Variables:** `python-dotenv`
-*   **Markdown Rendering:** `markdown`
 
 ## Setup and Running
 
@@ -224,17 +222,6 @@ The application consists of three main components:
 3.  **Add Type Hinting & Docstring:** Use Python type hints for arguments and the return type. Write a clear docstring explaining what the tool does, its arguments, and what it returns. Gemini uses this information to understand how and when to use the tool. The return value should ideally be a JSON string representing the result or status.
 4.  **Restart the Application:** When the application restarts, the `FinanceAgentClientLogic` will automatically connect to the MCP server, list the available tools (including your new one), and make it available to Gemini during subsequent interactions.
 
-## Limitations & Future Work
-
-*   **Open Source Deviation:** Uses proprietary services (Google Gemini, Groq API) instead of fully open-source models/transcription as per the initial requirements. Replacing these would require significant changes (e.g., using local LLMs via Ollama/Llama.cpp, local Whisper).
-*   **Basic RAG:** The `query_knowledge_base` uses simple keyword matching. Implementing more advanced RAG (e.g., vector embeddings, semantic search) would provide more relevant results.
-*   **Error Handling:** While basic error handling exists, it could be made more robust, especially around MCP communication and tool execution failures.
-*   **Data Persistence:** Uses a single JSON file (`finance_data.json`) for structured data, which is not suitable for large-scale or concurrent use. A proper database would be needed for more serious applications.
-*   **State Management:** Assumes a single user; scaling to multiple users would require managing separate agent instances or sessions.
-*   **Testing:** Lacks comprehensive unit and integration tests as outlined in the initial requirements.
-*   **Security:** Basic filename validation exists, but further security hardening might be necessary depending on the deployment environment.
-*   **Performance:** Performance relies heavily on external APIs (Gemini, Groq) and the efficiency of the MCP server tools. Optimization might be needed for complex tools or large data volumes.
-*   **Dynamic Agent Building:** The current setup provides a specific Finance Agent. Building a truly dynamic *agent builder* for arbitrary systems (like ERPs) is a much larger task requiring meta-prompting, schema generation/parsing, and more complex tool definition/discovery mechanisms.
 
 ## License
 
