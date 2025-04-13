@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Finance Agent</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script> <!-- Added typography plugin -->
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .htmx-indicator { opacity: 0; transition: opacity 300ms ease-in-out; }
+        .htmx-request .htmx-indicator { opacity: 1; }
+        .htmx-request.htmx-indicator { opacity: 1; }
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px;}
+        ::-webkit-scrollbar-track { background: transparent; border-radius: 10px;}
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px;} /* slate-400 */
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; } /* slate-500 */
+
+        /* Add subtle transition to chat messages */
+        .message {
+           transition: all 0.3s ease-out;
+        }
+         /* Ensure indicator stays centered */
+         #send-button-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+         }
+         /* Styles for the data viewer scrollable content area */
+         .data-panel {
+             overflow-y: auto;
+             /* height/padding handled by Tailwind classes now */
+         }
+         /* Headers WITHIN a panel (e.g., Accounts, Invoices, Budgets) */
+         .data-section-header {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4338ca; /* indigo-700 */
+            padding-bottom: 0.5rem;
+            margin-top: 1.25rem; /* Space above section headers */
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid #e2e8f0; /* slate-200 */
+         }
+         .data-section-header:first-child {
+             margin-top: 0; /* No top margin for the very first header */
+         }
+         /* Individual data item styling */
+         .data-item {
+            background-color: white;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 1rem; /* Increased padding */
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem; /* Smaller text for data */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03); /* Softer shadow */
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+         }
+         .data-item:hover {
+             background-color: #f8fafc; /* slate-50 */
+             box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+         }
+         .data-item strong {
+            color: #374151; /* gray-700 - Darker for contrast */
+            min-width: 75px; /* Align keys slightly wider */
+            display: inline-block;
+            margin-right: 0.5rem;
+            font-weight: 500;
+         }
+         .data-item span:not(.status-badge):not(.currency) { /* Avoid applying to badges/currency spans */
+            color: #4b5563; /* gray-600 */
+         }
+         .data-item div { /* Style individual key-value pairs */
+            margin-bottom: 0.35rem; /* Slightly more spacing */
+            line-height: 1.4;
+         }
+         .data-item div:last-child {
+             margin-bottom: 0;
+         }
+         .currency {
+            font-weight: 500;
+         }
+         .positive-amount { color: #10b981; } /* emerald-500 */
+         .negative-amount { color: #ef4444; } /* red-500 */
+
+        /* Loading indicator styling */
+        .loading-indicator {
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             height: 100%;
+             text-align: center;
+             color: #64748b; /* slate-500 */
+             font-size: 0.875rem;
+        }
+        .loading-indicator svg {
+            margin-right: 0.5rem;
+        }
+
+        /* Specific Panel Headers (Outside scroll area) */
+        #overview-header, #transaction-list-header {
+            padding: 1rem 1.25rem; /* Slightly more horizontal padding */
+            border-bottom: 1px solid #e2e8f0; /* slate-200 */
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem; /* Slightly more gap */
+            font-size: 1rem;
+            font-weight: 600;
+            color: #3730a3; /* indigo-800 */
+            background-color: rgba(255, 255, 255, 0.6); /* Match panel bg slightly */
+            border-top-left-radius: 0.75rem; /* Match panel rounding */
+            border-top-right-radius: 0.75rem;
+        }
+        /* Badge styling */
+        .status-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.1rem 0.5rem;
+            border-radius: 0.75rem; /* rounded-full */
+            text-transform: capitalize;
+            line-height: 1.2; /* Ensure consistent height */
+        }
+        /* Specific Status Colors (Add more as needed) */
+        .status-draft { background-color: #e0e7ff; color: #3730a3;} /* indigo-100 / indigo-800 */
+        .status-sent { background-color: #ccfbf1; color: #047857;} /* teal-100 / teal-700 */
+        .status-paid { background-color: #dcfce7; color: #166534;} /* green-100 / green-800 */
+        .status-overdue { background-color: #fee2e2; color: #991b1b;} /* red-100 / red-800 */
+        .status-void { background-color: #f3f4f6; color: #4b5563;} /* gray-100 / gray-600 */
+        .status-active { background-color: #dcfce7; color: #166534;} /* green-100 / green-800 */
+        .status-inactive { background-color: #fef3c7; color: #92400e;} /* amber-100 / amber-700 */
+        .status-pending { background-color: #fef3c7; color: #92400e;} /* amber-100 / amber-700 */
+        .status-posted { background-color: #f3f4f6; color: #4b5563;} /* gray-100 / gray-600 */ /* Less prominent */
+        .status-cleared { background-color: #dcfce7; color: #166534;} /* green-100 / green-800 */ /* More prominent */
+        .status-unknown { background-color: #f3f4f6; color: #4b5563;} /* gray-100 / gray-600 */
+    </style>
+</head>
+<body class="bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50 h-screen overflow-hidden">
+
+    <div class="flex flex-col h-full">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 shadow-md flex items-center space-x-3 flex-shrink-0 z-10">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 p-1 bg-white/20 rounded-lg">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+             </svg>
+            <h1 class="text-xl font-semibold tracking-tight">AI Finance Agent</h1>
+        </header>
+
+        <!-- Main Content Area (Flex Container) -->
+        <main class="flex flex-row flex-grow overflow-hidden p-4 md:p-6 gap-4 md:gap-6">
+
+            <!-- === Part 1: Financial Overview (Left) === -->
+            <aside class="w-64 md:w-72 bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-slate-200/60 flex flex-col flex-shrink-0 overflow-hidden">
+                <!-- Header -->
+                <div id="overview-header">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                     </svg>
+                    Financial Overview
+                </div>
+                <!-- Content Area -->
+                <div id="overview-content" class="data-panel flex-grow p-4"> <!-- Added p-4 -->
+                    <!-- Loading Indicator -->
+                    <div id="overview-indicator" class="loading-indicator">
+                        <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading overview...
+                    </div>
+                     <!-- Data rendered here by JS -->
+                </div>
+            </aside>
+
+            <!-- === Part 2: Creative Chatbot (Center) === -->
+            <section class="flex-1 flex flex-col bg-white rounded-xl shadow-xl border border-slate-200/50 overflow-hidden">
+                <!-- Chat Messages -->
+                <div id="chatbox" class="flex-grow overflow-y-auto p-4 md:p-6 space-y-4 scroll-smooth">
+                     <!-- Welcome Message (Styled to match Jinja agent welcome) -->
+                     <div class="message p-3 rounded-xl max-w-[85%] mr-auto bg-gradient-to-br from-indigo-50 to-purple-50 text-slate-800 rounded-bl-none border-l-4 border-indigo-400 shadow-md hover:shadow-lg transition-all">
+                         <div class="text-xs font-semibold mb-1.5 tracking-wide uppercase flex items-center gap-1.5 text-indigo-600">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path d="M9.98 1.03a.75.75 0 01.04 0A8.002 8.002 0 0118 9v5.25a.75.75 0 01-1.5 0V9A6.502 6.502 0 003.02 7.623 1.75 1.75 0 01.695 9.815 9.502 9.502 0 009.98 1.03z" /><path d="M11.2 9.49a2.5 2.5 0 10-3.9 0 3.5 3.5 0 00-1.145 2.554 5.25 5.25 0 006.19 0 3.5 3.5 0 00-1.145-2.554zM12 14.25a.75.75 0 010 1.5h-4a.75.75 0 010-1.5h4z" /></svg>
+                             <span>AI Assistant</span>
+                         </div>
+                         <div class="text-sm leading-relaxed break-words prose prose-sm max-w-none prose-slate prose-a:text-indigo-600 hover:prose-a:text-indigo-800">
+                            Hello! I'm your AI Finance Agent. Explore your financial overview/transactions, ask questions, upload documents, or use the microphone!
+                         </div>
+                    </div>
+                     <!-- Chat messages appended here -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 border-t border-slate-200/80 bg-slate-50 flex-shrink-0">
+                     <!-- Status message area for voice -->
+                    <div id="voice-status" class="text-center text-sm text-slate-600 mb-2 h-5 transition-all duration-300"></div>
+
+                    <form
+                        id="chat-form"
+                        class="flex items-center space-x-3"
+                        hx-post="/chat"
+                        hx-target="#chatbox"
+                        hx-swap="beforeend scroll:#chatbox:bottom"
+                        hx-encoding="multipart/form-data"
+                        hx-indicator="#send-button">
+                        <!-- File Input -->
+                        <label class="flex-shrink-0 p-2 rounded-full hover:bg-slate-200 cursor-pointer border border-slate-300 transition duration-200 group relative" title="Upload File">
+                            <input type="file" id="file-input" name="file" class="hidden" accept=".csv,.txt,.json,.pdf,.xlsx,.xls,.md,.log"
+                                   onchange="document.getElementById('file-label-text').innerText = this.files[0] ? this.files[0].name.substring(0,10)+'...' : 'Attach'">
+                            <svg class="w-5 h-5 text-slate-500 group-hover:text-slate-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M15.621 4.379a3 3 0 0 0-4.242 0l-7 7a3 3 0 0 0 4.241 4.243h.001l.497-.5a.75.75 0 0 1 1.064 1.057l-.498.501-.002.002a4.5 4.5 0 0 1-6.364-6.364l7-7a4.5 4.5 0 0 1 6.368 6.36l-3.455 3.553A2.625 2.625 0 1 1 9.53 9.55l3.454-3.553a.75.75 0 0 0-1.06-1.062L8.469 8.493a1.125 1.125 0 0 0 1.587 1.591l3.455-3.554a3 3 0 0 0 0-4.242Z" clip-rule="evenodd" />
+                            </svg>
+                             <!-- Tooltip for filename -->
+                            <span id="file-label-text" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max max-w-xs px-2 py-1 bg-slate-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">Attach</span>
+                        </label>
+
+                        <!-- Text Input Field -->
+                        <input
+                            type="text"
+                            id="command-input"
+                            name="command"
+                            class="flex-grow p-2.5 px-4 border border-slate-300 rounded-full focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 text-sm shadow-sm bg-white"
+                            placeholder="Ask anything or describe file..."
+                            autocomplete="off">
+
+                        <!-- Microphone Button -->
+                        <button type="button" id="record-button" class="flex-shrink-0 p-2 w-10 h-10 flex items-center justify-center text-indigo-600 bg-indigo-100 rounded-full hover:bg-indigo-200 border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-400 transition-colors duration-200 relative" title="Record Voice Command">
+                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
+                                <path d="M10 8a2 2 0 1 1-4 0V3a2 2 0 1 1 4 0v5zM8 0a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V3a3 3 0 0 0-3-3z"/>
+                            </svg>
+                            <!-- Recording status indicator dot -->
+                            <span id="recording-status" class="absolute -top-1 -right-1 flex h-3 w-3 hidden"> <!-- Hidden by default -->
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                        </button>
+
+                        <!-- Send Button -->
+                        <button id="send-button" type="submit" class="flex-shrink-0 p-2 w-10 h-10 flex items-center justify-center bg-indigo-600 text-white rounded-full hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 relative transition-colors duration-200">
+                             <span class="htmx-indicator absolute inset-0 flex items-center justify-center">
+                                 <svg id="send-button-indicator" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                             </span>
+                             <svg class="w-5 h-5 transition-opacity duration-200 htmx-request:opacity-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+                            </svg>
+                        </button>
+                    </form>
+
+                    <!-- Clear History Button -->
+                    <div class="flex justify-center mt-3">
+                        <button
+                            class="text-xs text-slate-500 hover:text-red-600 px-3 py-1 rounded hover:bg-slate-100 transition duration-200"
+                            hx-post="/clear_history"
+                            hx-target="#chatbox"
+                            hx-swap="innerHTML"
+                            hx-confirm="Are you sure you want to clear the chat history?"
+                            title="Clear Chat History"
+                        >
+                            Clear History
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+           <!-- === Part 3: Transactions List (Right) === -->
+           <aside class="w-80 md:w-96 bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-slate-200/60 flex flex-col flex-shrink-0 overflow-hidden">
+               <!-- Header -->
+               <div id="transaction-list-header">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                     <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+                   </svg>
+                  Recent Transactions
+               </div>
+               <!-- Content Area -->
+               <div id="transaction-list-content" class="data-panel flex-grow p-4"> <!-- Added p-4 -->
+                   <!-- Loading Indicator -->
+                   <div id="transaction-list-indicator" class="loading-indicator">
+                       <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                       </svg>
+                       Loading transactions...
+                   </div>
+                   <!-- Data rendered here by JS -->
+               </div>
+           </aside>
+
+        </main>
+    </div>
+
+    <!-- --- Voice JavaScript --- (No functional changes, kept as is) -->
+    <script>
+        const recordButton = document.getElementById('record-button');
+        const commandInput = document.getElementById('command-input');
+        const chatForm = document.getElementById('chat-form');
+        const recordingStatusSpan = document.getElementById('recording-status');
+        const voiceStatus = document.getElementById('voice-status');
+        const fileInput = document.getElementById('file-input');
+        const fileLabelText = document.getElementById('file-label-text');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let stream;
+
+        // Hide recording status initially
+        if (recordingStatusSpan) {
+            recordingStatusSpan.classList.add('hidden');
+        } else {
+            console.error("Recording status span not found.");
+        }
+
+        if (recordButton) {
+            recordButton.addEventListener('click', async () => {
+                if (!isRecording) {
+                    await startRecording();
+                } else {
+                    stopRecording();
+                }
+            });
+        } else {
+            console.error("Record button not found.");
+        }
+
+        async function startRecording() {
+            if (htmx.find('#send-button.htmx-request')) {
+                setVoiceStatus("Please wait for the current request to finish.", true);
+                setTimeout(() => setVoiceStatus(""), 3000);
+                return;
+            }
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                setVoiceStatus("Microphone access granted. Recording...");
+                // Change button style to indicate recording
+                recordButton.classList.replace('bg-indigo-100','bg-red-100');
+                recordButton.classList.replace('text-indigo-600','text-red-600');
+                recordButton.classList.replace('border-indigo-200','border-red-200');
+                recordingStatusSpan.classList.remove('hidden'); // Show red dot
+
+                const options = getSupportedMimeTypeOptions();
+                mediaRecorder = new MediaRecorder(stream, options);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = sendAudio;
+
+                mediaRecorder.onerror = (event) => {
+                    console.error('MediaRecorder error:', event.error);
+                    setVoiceStatus(`Recording error: ${event.error.name}`, true);
+                    resetRecordingState();
+                };
+
+                audioChunks = [];
+                mediaRecorder.start();
+                isRecording = true;
+
+            } catch (err) {
+                console.error('Error accessing microphone:', err);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    setVoiceStatus('Microphone access denied. Please allow access in browser settings.', true);
+                } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError'){
+                    setVoiceStatus('No microphone found.', true);
+                } else {
+                    setVoiceStatus(`Error accessing microphone: ${err.name}`, true);
+                }
+                resetRecordingState();
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                setVoiceStatus("Stopping recording...");
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+            }
+        }
+
+        function resetRecordingState() {
+             isRecording = false;
+             if (recordButton) {
+                 // Reset button style
+                 recordButton.classList.remove('bg-red-100', 'text-red-600', 'border-red-200');
+                 recordButton.classList.add('bg-indigo-100', 'text-indigo-600', 'border-indigo-200');
+             }
+             if (recordingStatusSpan) {
+                recordingStatusSpan.classList.add('hidden'); // Hide red dot
+             }
+        }
+
+        function getSupportedMimeTypeOptions() {
+            const types = [
+                'audio/webm;codecs=opus', 'audio/ogg;codecs=opus',
+                'audio/webm', 'audio/ogg', 'audio/wav'
+            ];
+            for (const type of types) {
+                if (MediaRecorder.isTypeSupported(type)) {
+                    console.log(`Using mimeType: ${type}`);
+                    return { mimeType: type };
+                }
+            }
+            console.warn("No preferred mimeType supported, using browser default.");
+            return {};
+        }
+
+        async function sendAudio() {
+            resetRecordingState(); // Reset visuals first
+
+            if (audioChunks.length === 0) {
+                setVoiceStatus("No audio recorded.", true);
+                 setTimeout(() => setVoiceStatus(""), 3000);
+                return;
+            }
+
+            setVoiceStatus("Processing audio...");
+            const mimeType = mediaRecorder?.mimeType || 'audio/webm';
+            const audioBlob = new Blob(audioChunks, { type: mimeType });
+            audioChunks = [];
+
+            const formData = new FormData();
+            const fileExtension = mimeType.split('/')[1].split(';')[0] || 'webm';
+            formData.append('audio_file', audioBlob, `recording.${fileExtension}`);
+
+            const sendButton = htmx.find('#send-button');
+             if (sendButton) {
+                 htmx.addClass(sendButton, 'htmx-request'); // Manually show indicator
+             }
+
+            try {
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Transcription failed: ${response.status} ${response.statusText}. ${errorText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.transcription) {
+                    if (commandInput) {
+                        commandInput.value = result.transcription;
+                    }
+                    setVoiceStatus("Transcription complete. Sending command...");
+                    if (chatForm) {
+                        htmx.trigger(chatForm, 'submit');
+                         setTimeout(() => setVoiceStatus(""), 1500);
+                    } else {
+                         setVoiceStatus("Error: Chat form not found.", true);
+                         setTimeout(() => setVoiceStatus(""), 5000);
+                    }
+                } else {
+                   setVoiceStatus("Transcription successful, but no text detected.", true);
+                   setTimeout(() => setVoiceStatus(""), 5000);
+                }
+
+            } catch (error) {
+                console.error('Error sending/transcribing audio:', error);
+                setVoiceStatus(`Error: ${error.message}`, true);
+                 setTimeout(() => setVoiceStatus(""), 5000);
+            } finally {
+                 // Ensure indicator is removed reliably
+                 setTimeout(() => {
+                     if (sendButton) htmx.removeClass(sendButton, 'htmx-request');
+                 }, 250); // Slightly longer delay
+            }
+        }
+
+        function setVoiceStatus(message, isError = false) {
+            if (voiceStatus) {
+                voiceStatus.textContent = message;
+                voiceStatus.className = `text-center text-sm mb-2 h-5 transition-all duration-300 ${isError ? 'text-red-600 font-medium' : 'text-slate-600'}`;
+            }
+        }
+
+        // Clear voice status on manual input or file selection
+        if (commandInput) {
+            commandInput.addEventListener('input', () => setVoiceStatus(""));
+        }
+        if (fileInput) {
+            fileInput.addEventListener('change', () => setVoiceStatus(""));
+        }
+    </script>
+    <!-- --- END Voice JavaScript --- -->
+
+    <!-- --- JavaScript for form reset --- (No changes, kept as is) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatForm = document.getElementById('chat-form');
+            const commandInput = document.getElementById('command-input');
+            const fileInput = document.getElementById('file-input'); // Added ref
+            const fileLabelText = document.getElementById('file-label-text');
+            if (chatForm) {
+                chatForm.addEventListener('htmx:afterRequest', function(event) {
+                    this.reset();
+                    if (fileLabelText) { fileLabelText.innerText = 'Attach'; }
+                    if (commandInput) { commandInput.value = ''; }
+                    if(fileInput) { fileInput.value = null; } // Explicitly clear file input
+                });
+                chatForm.addEventListener('htmx:responseError', function(event) {
+                    console.error("HTMX request failed:", event.detail.error);
+                    // Optionally display an error message to the user here
+                });
+            } else { console.error("Chat form element not found."); }
+        });
+    </script>
+    <!-- --- END form reset JavaScript --- -->
+
+    <!-- --- UPDATED JavaScript for Data Loading (Overview & Transactions) --- (No functional changes, uses updated styles) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const overviewContainer = document.getElementById('overview-content');
+            const overviewLoadingIndicator = document.getElementById('overview-indicator');
+            const transactionContainer = document.getElementById('transaction-list-content');
+            const transactionLoadingIndicator = document.getElementById('transaction-list-indicator');
+
+            const POLLING_INTERVAL_MS = 5000; // Check every 5 seconds (Adjust as needed)
+            let isInitialLoad = true;
+            let pollIntervalId = null;
+
+            const formatCurrency = (amount, currency = 'USD') => {
+                try {
+                     return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
+                } catch (e) { return `${currency} ${amount}`; }
+            };
+
+            const renderAmount = (amount, currency) => {
+                const formattedAmount = formatCurrency(amount, currency);
+                const amountClass = amount >= 0 ? 'positive-amount' : 'negative-amount';
+                return `<span class="${amountClass} currency">${formattedAmount}</span>`;
+            };
+
+            const renderStatusBadge = (status) => {
+                if (!status) return '';
+                const statusLower = status.toLowerCase().replace(/\s+/g, '-'); // e.g., "Over Due" -> "over-due"
+                const badgeClass = `status-${statusLower}`;
+                // Use a fallback style if a specific class isn't defined
+                const defaultClass = `status-badge status-unknown`;
+                // Basic check if a specific class exists in the stylesheet (less reliable than predefined list)
+                // A better approach is to have CSS for all expected statuses
+                return `<span class="status-badge ${badgeClass}">${status}</span>`; // Rely on CSS having the class or falling back visually
+            };
+
+            async function loadAndRenderFinancialData() {
+                let data;
+                try {
+                    // Added cache-busting timestamp
+                    const response = await fetch(`/static/finance_data.json?t=${new Date().getTime()}`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    data = await response.json();
+                } catch (error) {
+                     console.error('Error fetching financial data:', error);
+                     if (isInitialLoad) {
+                         const errorMsg = `<div class="p-4 text-center text-red-600 text-sm">Error loading data: ${error.message}. Please check console or try again later.</div>`;
+                         if (overviewContainer) overviewContainer.innerHTML = errorMsg;
+                         if (transactionContainer) transactionContainer.innerHTML = errorMsg;
+                         // Keep indicators if container exists, otherwise remove
+                         if (overviewContainer && overviewLoadingIndicator) overviewLoadingIndicator.remove();
+                         if (transactionContainer && transactionLoadingIndicator) transactionLoadingIndicator.remove();
+                     } else {
+                         // Optionally show a non-intrusive update error if polling fails later
+                         console.warn("Polling update failed.");
+                     }
+                     isInitialLoad = false; // Stop retrying indicator removal on subsequent errors
+                     return;
+                }
+
+                // --- Build Overview Panel HTML ---
+                let overviewHtml = '';
+                let hasOverviewData = false;
+
+                // Render Accounts
+                if (data.accounts && Object.keys(data.accounts).length > 0) {
+                    hasOverviewData = true;
+                    overviewHtml += '<h4 class="data-section-header">Accounts</h4>';
+                    Object.values(data.accounts).sort((a,b) => (a.name || '').localeCompare(b.name || '')).forEach(acc => {
+                        overviewHtml += '<div class="data-item">';
+                        overviewHtml += `<div><strong>${acc.name || 'N/A'}</strong></div>`;
+                        overviewHtml += `<div>${renderAmount(acc.balance || 0, acc.currency || 'USD')}</div>`;
+                        if (acc.account_number_masked) {
+                            overviewHtml += `<div class="text-xs text-slate-500">***${acc.account_number_masked.slice(-4)}</div>`;
+                        }
+                        if (acc.status) {
+                            overviewHtml += `<div>${renderStatusBadge(acc.status)}</div>`;
+                        }
+                        overviewHtml += '</div>';
+                    });
+                }
+
+                // Render Invoices
+                const MAX_INVOICES_DISPLAY = 5;
+                if (data.invoices && Object.keys(data.invoices).length > 0) {
+                    hasOverviewData = true;
+                    overviewHtml += '<h4 class="data-section-header">Recent Invoices</h4>';
+                    const sortedInvoices = Object.values(data.invoices)
+                        .sort((a, b) => (b.issue_date || '0').localeCompare(a.issue_date || '0')); // Safer sort
+                    sortedInvoices.slice(0, MAX_INVOICES_DISPLAY).forEach(inv => {
+                         overviewHtml += '<div class="data-item">';
+                         overviewHtml += `<div><strong>To:</strong> <span>${inv.customer_name || 'N/A'}</span></div>`;
+                         overviewHtml += `<div><strong>Amt:</strong> ${renderAmount(inv.amount || 0, inv.currency || 'USD')}</div>`;
+                         overviewHtml += `<div><strong>Due:</strong> <span>${inv.due_date || 'N/A'}</span></div>`;
+                         if (inv.status) { // Only show status if it exists
+                            overviewHtml += `<div>${renderStatusBadge(inv.status)}</div>`;
+                         }
+                         overviewHtml += '</div>';
+                    });
+                     if (Object.keys(data.invoices).length > MAX_INVOICES_DISPLAY) {
+                        overviewHtml += `<div class="text-xs text-slate-500 text-center mt-1">Showing last ${MAX_INVOICES_DISPLAY} invoices...</div>`;
+                    }
+                }
+
+                // Render Budgets
+                 const MAX_BUDGETS_DISPLAY = 5;
+                 if (data.budgets && Object.keys(data.budgets).length > 0) {
+                    hasOverviewData = true;
+                    overviewHtml += '<h4 class="data-section-header">Budgets</h4>';
+                    const sortedBudgets = Object.values(data.budgets)
+                        .sort((a, b) => (a.category || '').localeCompare(b.category || ''));
+                    sortedBudgets.slice(0, MAX_BUDGETS_DISPLAY).forEach(bud => {
+                         overviewHtml += '<div class="data-item">';
+                         overviewHtml += `<div><strong>${bud.category || 'N/A'}</strong></div>`;
+                         overviewHtml += `<div><strong>Limit:</strong> ${renderAmount(bud.limit || 0, bud.currency || 'USD')}</div>`;
+                         overviewHtml += `<div class="text-xs text-slate-500">${bud.period_type || 'N/A'} Period</div>`;
+                         overviewHtml += '</div>';
+                    });
+                      if (Object.keys(data.budgets).length > MAX_BUDGETS_DISPLAY) {
+                        overviewHtml += `<div class="text-xs text-slate-500 text-center mt-1">Showing first ${MAX_BUDGETS_DISPLAY} budgets...</div>`;
+                    }
+                }
+
+                if (!hasOverviewData) {
+                     overviewHtml = '<div class="p-4 text-center text-slate-500 text-sm">No accounts, invoices, or budgets found.</div>';
+                }
+
+
+                // --- Build Transactions Panel HTML ---
+                let transactionsHtml = '';
+                const MAX_TRANSACTIONS_DISPLAY = 30; // Increased limit slightly
+                if (data.transactions && data.transactions.length > 0) {
+                     const sortedTransactions = data.transactions.sort((a, b) => (b.date || '0').localeCompare(a.date || '0')); // Safer sort
+                    sortedTransactions.slice(0, MAX_TRANSACTIONS_DISPLAY).forEach(txn => {
+                        transactionsHtml += '<div class="data-item">';
+                        transactionsHtml += `<div><strong>${txn.description || 'N/A'}</strong></div>`;
+                        const account = data.accounts ? data.accounts[txn.account_id] : null;
+                        const accountCurrency = account?.currency || 'USD';
+                        transactionsHtml += `<div>${renderAmount(txn.amount || 0, accountCurrency)}</div>`;
+                        transactionsHtml += `<div class="text-xs text-slate-500 mt-1"><span>${txn.date || 'N/A'}</span> | <span>${txn.category || 'Uncategorized'}</span></div>`;
+                        // Only show status badge if it's noteworthy (e.g., pending, void)
+                        if (txn.status && !['posted', 'cleared', 'active', 'paid'].includes(txn.status.toLowerCase())) {
+                            transactionsHtml += `<div class="mt-1">${renderStatusBadge(txn.status)}</div>`;
+                        }
+                        transactionsHtml += '</div>';
+                    });
+                    if (data.transactions.length > MAX_TRANSACTIONS_DISPLAY) {
+                        transactionsHtml += `<div class="text-xs text-slate-500 text-center mt-1">Showing last ${MAX_TRANSACTIONS_DISPLAY} transactions...</div>`;
+                    }
+                } else {
+                    transactionsHtml = '<div class="p-4 text-center text-slate-500 text-sm">No transactions found.</div>';
+                }
+
+                // --- Update the DOM ---
+                // Check if container still exists before updating
+                if (overviewContainer) {
+                    if (overviewLoadingIndicator && isInitialLoad) {
+                        overviewLoadingIndicator.remove();
+                    }
+                    overviewContainer.innerHTML = overviewHtml;
+                }
+                if (transactionContainer) {
+                     if (transactionLoadingIndicator && isInitialLoad) {
+                        transactionLoadingIndicator.remove();
+                     }
+                    transactionContainer.innerHTML = transactionsHtml;
+                }
+
+                isInitialLoad = false; // Mark initial load complete
+
+            } // --- End of loadAndRenderFinancialData ---
+
+            // --- Initial Load & Polling ---
+            loadAndRenderFinancialData(); // Initial load
+            if (!pollIntervalId) {
+                 pollIntervalId = setInterval(loadAndRenderFinancialData, POLLING_INTERVAL_MS);
+                 console.log(`Data panels polling started every ${POLLING_INTERVAL_MS / 1000} seconds.`);
+            }
+
+            // Optional: Clear interval when the page is unloaded
+            window.addEventListener('beforeunload', () => {
+                if (pollIntervalId) {
+                    clearInterval(pollIntervalId);
+                    console.log("Data panels polling stopped.");
+                }
+            });
+
+        }); // --- End of DOMContentLoaded ---
+    </script>
+    <!-- --- END Data Loading JavaScript --- -->
+
+</body>
+</html>

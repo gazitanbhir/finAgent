@@ -1,0 +1,36 @@
+{# templates/file_list_fragment.html #}
+
+{% if error_message %}
+<div class="px-3 py-2 text-sm text-red-700 bg-red-100 rounded-md border border-red-200 m-2 shadow-sm">
+    <span class="font-medium">Error:</span> {{ error_message }}
+</div>
+{% elif files %}
+<ul class="space-y-0.5 text-sm py-1">
+    {% for file in files %}
+    <li>
+        {# Added data-filename for JS selection #}
+        <a href="#" data-filename="{{ file }}" class="flex items-center space-x-2 px-3 py-1.5 rounded-md text-slate-700 hover:bg-indigo-50 hover:text-indigo-800 transition-all duration-150 ease-in-out group relative" title="{{ file }}">
+            {% set ext = file.split('.')[-1].lower() %}
+            <span class="flex-shrink-0 w-4 h-4"> {# Container for icon #}
+            {% if ext == 'pdf' %}
+                {# Document Text Icon (Red) #}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-full h-full text-red-500 group-hover:text-red-600"> <path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z" clip-rule="evenodd" /></svg>
+            {% elif ext in ['xlsx', 'xls', 'csv'] %}
+                {# Table Cells Icon (Green) #}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-full h-full text-green-500 group-hover:text-green-600"> <path d="M1 4.5A2.5 2.5 0 013.5 2h13A2.5 2.5 0 0119 4.5v11a2.5 2.5 0 01-2.5 2.5h-13A2.5 2.5 0 011 15.5v-11zM4 8a1 1 0 011-1h4a1 1 0 110 2H5a1 1 0 01-1-1zm0 4a1 1 0 011-1h4a1 1 0 110 2H5a1 1 0 01-1-1zm7-.5a.5.5 0 000 1h3a.5.5 0 000-1h-3zM11 11a.5.5 0 01.5.5v3a.5.5 0 01-1 0v-3a.5.5 0 01.5-.5zM14 8.5a.5.5 0 00-1 0v7a.5.5 0 001 0v-7z" /></svg>
+            {% elif ext == 'json' %}
+                 {# Code Bracket Icon (Indigo) #}
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-full h-full text-indigo-500 group-hover:text-indigo-600"> <path fill-rule="evenodd" d="M6.28 5.22a.75.75 0 010 1.06L2.56 10l3.72 3.72a.75.75 0 01-1.06 1.06L1 10.53a.75.75 0 010-1.06l4.22-4.22a.75.75 0 011.06 0zm7.44 0a.75.75 0 011.06 0l4.22 4.22a.75.75 0 010 1.06L14.78 14.78a.75.75 0 01-1.06-1.06L17.44 10l-3.72-3.72a.75.75 0 010-1.06zM11.344 3.282a.75.75 0 01.612 1.328L8.34 15.39a.75.75 0 01-1.224-.656l3.616-10.84a.75.75 0 01.612-.612z" clip-rule="evenodd" /></svg>
+            {% else %}
+                {# Document Icon (Slate) #}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-full h-full text-slate-400 group-hover:text-slate-500"> <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 2a1 1 0 011-1h4a1 1 0 110 2H7a1 1 0 01-1-1zm0 4a1 1 0 011-1h4a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
+            {% endif %}
+            </span>
+            <span class="truncate flex-1">{{ file }}</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="text-sm text-slate-500 px-4 py-3 italic">No files uploaded yet.</p>
+{% endif %}

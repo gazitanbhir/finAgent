@@ -1,0 +1,405 @@
+{
+  "accounts": {
+    "acc-123": {
+      "id": "acc-123",
+      "name": "Primary Checking",
+      "balance": 5550.1,
+      "currency": "USD",
+      "type": "checking",
+      "institution": "Global Bank Corp",
+      "account_number_masked": "xxxx-6789",
+      "opened_date": "2020-01-15",
+      "status": "active",
+      "last_updated": "2024-10-10T14:55:00Z"
+    },
+    "acc-456": {
+      "id": "acc-456",
+      "name": "High-Yield Savings",
+      "balance": 15340.12,
+      "currency": "USD",
+      "type": "savings",
+      "institution": "Digital Savings Inc.",
+      "account_number_masked": "xxxx-1122",
+      "opened_date": "2021-05-20",
+      "status": "active",
+      "last_updated": "2024-07-15T09:00:00Z"
+    },
+    "acc-789": {
+      "id": "acc-789",
+      "name": "Travel Rewards Card",
+      "balance": -875.5,
+      "currency": "USD",
+      "type": "credit_card",
+      "institution": "Premier Cards Co.",
+      "account_number_masked": "xxxx-3344",
+      "opened_date": "2022-03-10",
+      "credit_limit": 10000.0,
+      "payment_due_date": "2024-11-15",
+      "status": "active",
+      "last_updated": "2024-10-09T11:20:00Z"
+    }
+  },
+  "transactions": [
+    {
+      "id": "txn-001",
+      "account_id": "acc-123",
+      "date": "2024-07-15",
+      "description": "Grocery Store ABC",
+      "amount": -75.2,
+      "category": "Groceries",
+      "status": "posted",
+      "payment_method": "Debit Card",
+      "vendor_id": "ven-store-abc",
+      "notes": "Weekly grocery run",
+      "tags": [
+        "food",
+        "essentials"
+      ],
+      "source_file": null
+    },
+    {
+      "id": "txn-002",
+      "account_id": "acc-123",
+      "date": "2024-07-16",
+      "description": "Salary Deposit - Acme Corp",
+      "amount": 3000.0,
+      "category": "Income",
+      "status": "posted",
+      "payment_method": "Direct Deposit",
+      "vendor_id": null,
+      "notes": "July Paycheck Part 1",
+      "tags": [
+        "salary",
+        "work"
+      ],
+      "source_file": null
+    },
+    {
+      "id": "txn-003",
+      "account_id": "acc-789",
+      "date": "2024-07-18",
+      "description": "Restaurant - The Italian Place",
+      "amount": -45.0,
+      "category": "Business Meal",
+      "status": "posted",
+      "payment_method": "Credit Card",
+      "vendor_id": "ven-italian-place",
+      "notes": "Dinner with colleagues",
+      "tags": [
+        "food",
+        "social",
+        "work"
+      ],
+      "source_file": null
+    },
+    {
+      "id": "txn-004",
+      "account_id": "acc-123",
+      "date": "2024-08-01",
+      "description": "Rent Payment - August",
+      "amount": -1500.0,
+      "category": "Housing",
+      "status": "posted",
+      "payment_method": "Bank Transfer",
+      "vendor_id": "ven-landlord-prop",
+      "notes": null,
+      "tags": [
+        "rent",
+        "fixed expense"
+      ],
+      "source_file": null
+    },
+    {
+      "id": "txn-4ec460",
+      "account_id": "acc-123",
+      "date": "2024-10-10",
+      "description": "Manual Deposit",
+      "amount": 50.0,
+      "category": "Transfer",
+      "status": "posted",
+      "payment_method": "Cash",
+      "vendor_id": null,
+      "notes": "Cash deposit at ATM",
+      "tags": [
+        "cash"
+      ],
+      "source_file": null
+    },
+    {
+      "id": "txn-6baeb7",
+      "account_id": "acc-123",
+      "date": "2024-08-08",
+      "description": "Utility Bill - Power Co",
+      "amount": -95.75,
+      "category": "Utilities",
+      "status": "posted",
+      "payment_method": "Auto-Pay (Checking)",
+      "vendor_id": "ven-power-co",
+      "notes": "July electricity usage",
+      "tags": [
+        "utilities",
+        "fixed expense"
+      ],
+      "source_file": null
+    },
+    {
+      "id": "txn-csv-001",
+      "account_id": "acc-123",
+      "date": "2024-09-05",
+      "description": "Coffee Shop",
+      "amount": -5.5,
+      "category": "Dining",
+      "status": "posted",
+      "payment_method": "Debit Card",
+      "vendor_id": null,
+      "notes": "Morning coffee",
+      "tags": [
+        "food",
+        "coffee"
+      ],
+      "source_file": "bank_statement_sept.csv"
+    },
+    {
+      "id": "txn-csv-002",
+      "account_id": "acc-123",
+      "date": "2024-09-10",
+      "description": "Bookstore Purchase",
+      "amount": -25.99,
+      "category": "Shopping",
+      "status": "posted",
+      "payment_method": "Debit Card",
+      "vendor_id": null,
+      "notes": "New novel",
+      "tags": [
+        "books",
+        "leisure"
+      ],
+      "source_file": "bank_statement_sept.csv"
+    },
+    {
+      "id": "txn-6520bd",
+      "account_id": "acc-123",
+      "date": "2024-10-09",
+      "description": "Consulting Gig",
+      "amount": 500.0,
+      "category": "Uncategorized"
+    },
+    {
+      "id": "txn-4d19a8",
+      "account_id": "acc-123",
+      "date": "2020-10-10",
+      "description": "manual addition",
+      "amount": 10.0,
+      "category": "Uncategorized"
+    },
+    {
+      "id": "txn-878aef",
+      "account_id": "acc-123",
+      "date": "2020-10-10",
+      "description": "Gaming",
+      "amount": -100.0,
+      "category": "Uncategorized"
+    },
+    {
+      "id": "txn-6db276",
+      "account_id": "acc-123",
+      "date": "2024-10-10",
+      "description": "Gaming",
+      "amount": 100.0,
+      "category": "Uncategorized"
+    },
+    {
+      "id": "txn-a91e0d",
+      "account_id": "acc-123",
+      "date": "2020-10-10",
+      "description": "gaming",
+      "amount": 100.0,
+      "category": "Uncategorized"
+    },
+    {
+      "id": "txn-573a2d",
+      "account_id": "acc-123",
+      "date": "2020-10-10",
+      "description": "gaming",
+      "amount": -100.0,
+      "category": "Uncategorized"
+    },
+    {
+      "id": "txn-5493d7",
+      "account_id": "acc-123",
+      "date": "2024-07-26",
+      "description": "Gaming - Our Expenses",
+      "amount": 400.0,
+      "category": "Gaming"
+    },
+    {
+      "id": "txn-c6aeaf",
+      "account_id": "acc-123",
+      "date": "2024-08-02",
+      "description": "Manual deposit",
+      "amount": 50.0,
+      "category": "Deposit"
+    }
+  ],
+  "invoices": {
+    "inv-a7b3f0": {
+      "id": "inv-a7b3f0",
+      "invoice_number": "INV-2024-001",
+      "customer_id": "cust-client-corp",
+      "customer_name": "Client Corp",
+      "amount": 1250.5,
+      "tax_amount": 0.0,
+      "total_amount": 1250.5,
+      "currency": "USD",
+      "issue_date": "2024-07-20",
+      "due_date": "2024-08-19",
+      "payment_terms": "Net 30",
+      "description": "Web Development Services - Phase 1",
+      "status": "paid",
+      "items": [
+        {
+          "id": "item-001",
+          "item_description": "Project Setup & Planning",
+          "quantity": 1,
+          "unit_price": 250.5,
+          "total": 250.5
+        },
+        {
+          "id": "item-002",
+          "item_description": "Frontend Development (Hours)",
+          "quantity": 10,
+          "unit_price": 100.0,
+          "total": 1000.0
+        }
+      ],
+      "notes": "Initial phase complete.",
+      "linked_transactions": [
+        "txn-payment-01"
+      ]
+    },
+    "inv-b8c4g1": {
+      "id": "inv-b8c4g1",
+      "invoice_number": "INV-2024-002",
+      "customer_id": "cust-startup-inc",
+      "customer_name": "Startup Inc.",
+      "amount": 3000.0,
+      "tax_amount": 240.0,
+      "total_amount": 3240.0,
+      "currency": "USD",
+      "issue_date": "2024-09-01",
+      "due_date": "2024-09-30",
+      "payment_terms": "Net 30",
+      "description": "Consulting Services - August",
+      "status": "sent",
+      "items": [
+        {
+          "id": "item-003",
+          "item_description": "Strategic Consulting (Hours)",
+          "quantity": 20,
+          "unit_price": 150.0,
+          "total": 3000.0
+        }
+      ],
+      "notes": "Monthly retainer.",
+      "linked_transactions": []
+    },
+    "inv-66052b": {
+      "id": "inv-66052b",
+      "customer_name": "Gaming Company",
+      "amount": 500.0,
+      "due_date": "2025-03-25",
+      "issue_date": "2025-04-13",
+      "description": "Services rendered",
+      "status": "draft"
+    }
+  },
+  "budgets": {
+    "bud-grocery-202407": {
+      "id": "bud-grocery-202407",
+      "category": "Groceries",
+      "period_type": "monthly",
+      "period_start": "2024-07-01",
+      "period_end": "2024-07-31",
+      "limit": 500.0,
+      "currency": "USD",
+      "alert_threshold": 0.8,
+      "notes": "Budget for July groceries"
+    },
+    "bud-dining-202407": {
+      "id": "bud-dining-202407",
+      "category": "Dining",
+      "period_type": "monthly",
+      "period_start": "2024-07-01",
+      "period_end": "2024-07-31",
+      "limit": 150.0,
+      "currency": "USD",
+      "alert_threshold": 0.9,
+      "notes": null
+    },
+    "bud-utilities-2024": {
+      "id": "bud-utilities-2024",
+      "category": "Utilities",
+      "period_type": "yearly",
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "limit": 1200.0,
+      "currency": "USD",
+      "alert_threshold": null,
+      "notes": "Annual utility budget"
+    }
+  },
+  "vendors": {
+    "ven-store-abc": {
+      "id": "ven-store-abc",
+      "name": "Grocery Store ABC",
+      "default_category": "Groceries",
+      "address": {
+        "street": "123 Main St",
+        "city": "Anytown",
+        "state": "CA",
+        "zip": "90210",
+        "country": "USA"
+      },
+      "phone": "555-0101",
+      "email": "info@grocerystoreabc.com",
+      "website": "www.grocerystoreabc.com",
+      "notes": "Primary grocery store."
+    },
+    "ven-italian-place": {
+      "id": "ven-italian-place",
+      "name": "The Italian Place",
+      "default_category": "Dining",
+      "address": {
+        "street": "456 Oak Ave",
+        "city": "Anytown",
+        "state": "CA",
+        "zip": "90211",
+        "country": "USA"
+      },
+      "phone": "555-1234",
+      "email": null,
+      "website": null,
+      "notes": "Good pasta."
+    },
+    "ven-landlord-prop": {
+      "id": "ven-landlord-prop",
+      "name": "Property Management LLC",
+      "default_category": "Housing",
+      "address": null,
+      "phone": "555-9876",
+      "email": "rentals@propertymgmt.com",
+      "website": null,
+      "notes": "Landlord for apartment."
+    },
+    "ven-power-co": {
+      "id": "ven-power-co",
+      "name": "City Power & Light",
+      "default_category": "Utilities",
+      "address": null,
+      "phone": "800-555-POWER",
+      "email": "billing@citypower.com",
+      "website": "www.citypower.com",
+      "notes": "Electricity provider."
+    }
+  }
+}
